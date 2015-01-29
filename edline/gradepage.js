@@ -1,6 +1,6 @@
 var iframe;
 var redirect = false;
-doRefresh = function(){
+var doRefresh = function(){
 	var gradetab = iframe.contents().find("html > body > form > div > table > tbody > tr > td");
 	var docid = /\d+/.exec(gradetab.attr("id"))[0];
 	var classdata = {};
@@ -26,8 +26,6 @@ doRefresh = function(){
 			maxpoints: Number(ptsmax)
 		})
 	});
-	cd = classdata;
-	gt = gradetab;
 	localStorage["bedl" + docid] = JSON.stringify(classdata);
 	if (redirect) window.location.href = "https://www.edline.net/UserDocList.page";
 };

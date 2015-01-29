@@ -89,9 +89,11 @@ $(document).ready(function(){
 	}
 	if(docreate) {
 		delete localStorage.bedlind;
-		beobj = new betterEdline();
+		delete localStorage.bedl;
+		var beobj = new betterEdline();
 		beobj.load();
-		beobj.addrowtext(0, '<strong>Grade <a href = "javascript:beobj.refresh()">(refresh)</a></strong>');
+		beobj.addrowtext(0, '<strong>Grade</strong> <a id = "bedlref"> &lt;refresh&gt;</a>');
+		$("#bedlref").click(function(){beobj.refresh();});
 		beobj.showGrades();
 	}
 });
