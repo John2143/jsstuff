@@ -5,6 +5,20 @@ var util = {
 	},
 	check: function(ctd){
 		return this.trim(ctd.eq(5).html()) === "Current Assignments Report";
+	},
+	getClassGrade: function(cd){
+		var cat = cd.categories;
+		var total = 0;
+		var totalw = 0;
+		for(var i = 0; i < cat.length; i++){
+			const c = cat[i];
+			if(c.maxpoints > 0 && c.weight > 0){
+				total += (c.points/c.maxpoints)*(c.weight);
+				totalw += c.weight
+			} 
+			console.log(c.name, total, totalw, c.points, c.maxpoints, c.weight);
+		}
+		return total;
 	}
 };
 
@@ -21,12 +35,8 @@ betterEdline.prototype.init = function(){
 	this.things = [];
 };
 
-betterEdline.prototype.add = function(ind, id){
-	this.things.push([id, ind]);
-};
-
-betterEdline.prototype.addGrade = function(grade){
-	if(this.things[ind]) this.things[ind][2] = grade;
+betterEdline.prototype.add = function(ind, id, cls){
+	this.things.push([id, ind, cls]);
 };
 
 var regex_classid = /\'(\d+)\'/;
@@ -40,10 +50,11 @@ betterEdline.prototype.load = function(){
 		const id = regex_classid.exec(
 			$t.eq(3).children().attr("href")
 		)[1];
-		_t.add(ind, id);
+		var cls = localStorage["bedl" + id];
+		if (cls) cls = JSON.parse(cls);
+		_t.add(ind, id, cls);
 	});
 };
-
 var gotoPage = function(code){
 	rlViewItm(code);
 };
@@ -62,7 +73,7 @@ betterEdline.prototype.addrowtext = function(id, text){
 betterEdline.prototype.showGrades = function(){
 	for(id in this.things){
 		var ob = this.things[id];
-		this.addrowtext(ob[1]-1, "? (?%)");
+		this.addrowtext(ob[1]-1, ob[2] ? this.util.getClassGrade(ob[2]) + "%" : "? (?%)");
 	}
 };
 
