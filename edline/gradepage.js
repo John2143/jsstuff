@@ -1,5 +1,7 @@
+var iframe;
+var redirect = false;
 doRefresh = function(){
-	var gradetab = $("#docViewBodyFrame").contents().find("html > body > form > div > table > tbody > tr > td");
+	var gradetab = iframe.contents().find("html > body > form > div > table > tbody > tr > td");
 	var docid = /\d+/.exec(gradetab.attr("id"))[0];
 	var classdata = {};
 	gradetab = gradetab.find("div").children("table");
@@ -11,7 +13,6 @@ doRefresh = function(){
 		var pts, ptsmax;
 		if(/\//.exec(ptsmx)) {
 			var reg = /\d+\.\d+/g
-			console.log("hi");
 			pts = reg.exec(ptsmx)[0];
 			ptsmax = reg.exec(ptsmx)[0];
 		}else{
@@ -28,10 +29,12 @@ doRefresh = function(){
 	cd = classdata;
 	gt = gradetab;
 	localStorage["bedl" + docid] = JSON.stringify(classdata);
+	if (redirect) window.location.href = "https://www.edline.net/UserDocList.page";
 };
 $(document).ready(function(){
+	iframe = $("#docViewBodyFrame");
 	if (localStorage.bedlind) {
-		doRefresh();
-		window.location.href = "https://www.edline.net/UserDocList.page";
+		redirect = true;
+		iframe.load(doRefresh);
 	}
 });

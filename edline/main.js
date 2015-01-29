@@ -11,14 +11,14 @@ var util = {
 		var total = 0;
 		var totalw = 0;
 		for(var i = 0; i < cat.length; i++){
-			const c = cat[i];
+			var c = cat[i];
 			if(c.maxpoints > 0 && c.weight > 0){
 				total += (c.points/c.maxpoints)*(c.weight);
 				totalw += c.weight
 			} 
-			console.log(c.name, total, totalw, c.points, c.maxpoints, c.weight);
 		}
-		return total;
+		if (totalw == 0) return 100;
+		return total*100/totalw;
 	}
 };
 
@@ -92,5 +92,6 @@ $(document).ready(function(){
 		beobj = new betterEdline();
 		beobj.load();
 		beobj.addrowtext(0, '<strong>Grade <a href = "javascript:beobj.refresh()">(refresh)</a></strong>');
+		beobj.showGrades();
 	}
 });
