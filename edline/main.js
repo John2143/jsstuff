@@ -21,8 +21,8 @@ betterEdline.prototype.init = function(){
 	this.things = [];
 };
 
-betterEdline.prototype.add = function(ind, id, cname){
-	this.things[ind] = ([id, cname]);
+betterEdline.prototype.add = function(ind, id){
+	this.things.push([id, ind]);
 };
 
 betterEdline.prototype.addGrade = function(grade){
@@ -40,20 +40,46 @@ betterEdline.prototype.load = function(){
 		const id = regex_classid.exec(
 			$t.eq(3).children().attr("href")
 		)[1];
-		const cname = _t.util.trim($t.eq(4).children().html());
-		_t.add(ind, id, cname);
+		_t.add(ind, id);
 	});
 };
 
+var gotoPage = function(code){
+	rlViewItm(code);
+};
+var getClassID = function(arr, ind){
+	return arr[ind][0];
+};
+betterEdline.prototype.refresh = function(){
+	localStorage.bedl = JSON.stringify(this.things);
+	localStorage.bedlind = 0;
+	gotoPage(getClassID(this.things, 0));
+};
 
 betterEdline.prototype.addrowtext = function(id, text){
 	this.container.eq(id).children().eq(0).html(text);
 };
 betterEdline.prototype.showGrades = function(){
 	for(id in this.things){
-		this.addrowtext(id-1, this.things[id][2] || "? (?%)");
+		var ob = this.things[id];
+		this.addrowtext(ob[1]-1, "? (?%)");
 	}
 };
-beobj = new betterEdline();
-beobj.load();
-beobj.addrowtext(0, "<strong>Grade</strong>");
+
+$(document).ready(function(){
+	var docreate = true;
+	if(localStorage.bedlind) {
+		docreate = false;
+		var arr = JSON.parse(localStorage.bedl);
+		if (++localStorage.bedlind < arr.length) 
+			gotoPage(getClassID(arr, localStorage.bedlind));
+		else
+			docreate = true;
+	}
+	if(docreate) {
+		delete localStorage.bedlind;
+		beobj = new betterEdline();
+		beobj.load();
+		beobj.addrowtext(0, '<strong>Grade <a href = "javascript:beobj.refresh()">(refresh)</a></strong>');
+	}
+});
