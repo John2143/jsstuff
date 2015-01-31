@@ -1,4 +1,30 @@
 var regex_trim = /\w.*\w/;
+var gradeBorders = [
+	100.01, "I",
+	96.21, "A+",
+	92.88, "A",
+	89.55, "A-",
+	86.21, "B+",
+	82.88, "B",
+	79.55, "B-",
+	76.21, "C+",
+	72.88, "C",
+	69.55, "C-",
+	66.21, "D+",
+	62.88, "D",
+	59.55, "D-",
+	39.70, "E+",
+	19.85, "E",
+	0, "E-"
+];
+gradeBorderVals = [], gradeBorderLetters = [];
+for (var i = 0; i < gradeBorders.length; i++)
+	if(i%2 === 0)
+		gradeBorderVals.push(gradeBorders[i]);
+	else
+		gradeBorderLetters.push(gradeBorders[i]);
+delete gradeBorders;
+
 var util = {
 	trim: function(str){
 		return regex_trim.exec(str)[0];
@@ -10,15 +36,22 @@ var util = {
 		var cat = cd.categories;
 		var total = 0;
 		var totalw = 0;
-		for(var i = 0; i < cat.length; i++){
+		for (i in cat){
 			var c = cat[i];
 			if(c.maxpoints > 0 && c.weight > 0){
 				total += (c.points/c.maxpoints)*(c.weight);
-				totalw += c.weight
-			} 
+				totalw += c.weight;
+			}
 		}
-		if (totalw == 0) return "100.01";
+		if (totalw === 0) return "100.01";
 		return (total*100/totalw).toFixed(2);
+	},
+	pctToLetter: function(pct){
+		for (var i = 0; i < gradeBorders.length; i++)
+			if(pct >= gradeBorderVals[i])
+				return gradeBorderLetters[i];
+
+		return "?";
 	}
 };
 if (!String.prototype.format) {
@@ -26,7 +59,7 @@ if (!String.prototype.format) {
         var str = this.toString();
         if (!arguments.length)
             return str;
-        var args = typeof arguments[0],
+        var args = typeof arguments[0];
             args = (("string" == args || "number" == args) ? arguments : arguments[0]);
         for (arg in args)
             str = str.replace(RegExp("\\{" + arg + "\\}", "gi"), args[arg]);
@@ -53,7 +86,7 @@ betterEdline.prototype.add = function(ind, id, cls){
 
 var regex_classid = /\'(\d+)\'/;
 betterEdline.prototype.load = function(){
-	var ind = 0;
+	var ind = -1;
 	var _t = this;
 	this.container.each(function(){
 		++ind;
@@ -67,6 +100,7 @@ betterEdline.prototype.load = function(){
 		_t.add(ind, id, cls);
 	});
 };
+
 var gotoPage = function(code){
 	rlViewItm(code);
 };
@@ -85,33 +119,37 @@ betterEdline.prototype.addrowtext = function(id, text){
 betterEdline.prototype.showGrades = function(){
 	for(id in this.things){
 		var ob = this.things[id];
-		this.addrowtext(ob[1]-1, ob[2] ? this.util.getClassGrade(ob[2]) + "%" : "? (?%)");
+		this.addrowtext(ob[1], ob[2] ? this.util.getClassGrade(ob[2]) + "%" : "? (?%)");
 	}
 };
 var iClass;
 betterEdline.prototype.showClassDetails = function(classind){
-	var data = this.things[classind];
+	var data;
+	for (i in this.things)
+		if (this.things[i][1] == classind)
+			data = this.things[i];
 	if(!data) return;
 	var cl = data[2];
+	var grade = this.util.getClassGrade(cl);
 	if(!iClass) iClass = $("<div>").appendTo($(".ed-tdEnd:first"));
 	iClass.html([
 		'Teacher: {0}',
 		'Class: <a href = "javascript:rlViewItm(\'{2}\')">{1} ({2})</a>',
-		'Grade: {3}',
+		'Grade: {4} ({3})',
 	].join("<br>").format(
 		cl.teacher,
-		"CLASSNAME",
-		data[0],
-		this.util.getClassGrade(cl)
+		cl.name,
+		cl.id,
+		grade,
+		this.util.pctToLetter(grade)
 	));
 };
-
 $(document).ready(function(){
 	var docreate = true;
 	if(localStorage.bedlind) {
 		docreate = false;
 		var arr = JSON.parse(localStorage.bedl);
-		if (++localStorage.bedlind < arr.length) 
+		if (++localStorage.bedlind < arr.length)
 			gotoPage(getClassID(arr, localStorage.bedlind));
 		else
 			docreate = true;
@@ -126,7 +164,7 @@ $(document).ready(function(){
 		beobj.showGrades();
 		$('.ed-formTable').eq(2).find("tbody > tr:gt(0)")
 			.click(function(){
-				beobj.showClassDetails($(this).index() - 1);
+				beobj.showClassDetails($(this).index());
 			});
 	}
 });
