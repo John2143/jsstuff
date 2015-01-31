@@ -17,7 +17,7 @@ var gradeBorders = [
 	19.85, "E",
 	0, "E-"
 ];
-gradeBorderVals = [], gradeBorderLetters = [];
+var gradeBorderVals = [], gradeBorderLetters = [];
 for (var i = 0; i < gradeBorders.length; i++)
 	if(i%2 === 0)
 		gradeBorderVals.push(gradeBorders[i]);
@@ -52,6 +52,23 @@ var util = {
 				return gradeBorderLetters[i];
 
 		return "?";
+	},
+	getDiscrepancy: function(gradeletter, classgrade){
+		if(!classgrade || gradeletter == "I") return gradeletter;
+		const gl = gradeletter[0];
+		if(gl != classgrade)
+			return "!!" + gradeletter + " > " + classgrade + "!!";
+		return gradeletter;
+	},
+	letterAndPct: function(cl, format){
+		const pct = this.getClassGrade(cl);
+		return (format || "{0} ({1}%)").format(
+			this.getDiscrepancy(
+				this.pctToLetter(pct),
+				cl.grade
+			), 
+			pct
+		);
 	}
 };
 if (!String.prototype.format) {
@@ -64,7 +81,7 @@ if (!String.prototype.format) {
         for (arg in args)
             str = str.replace(RegExp("\\{" + arg + "\\}", "gi"), args[arg]);
         return str;
-    }
+    };
 }
 
 var betterEdline = function(){
@@ -98,6 +115,10 @@ betterEdline.prototype.load = function(){
 		var cls = localStorage["bedl" + id];
 		if (cls) cls = JSON.parse(cls);
 		_t.add(ind, id, cls);
+		$t.parent().hover(
+			function(){$(this).addClass("bedlHover");},
+			function(){$(this).removeClass("bedlHover");}
+		);
 	});
 };
 
@@ -107,6 +128,7 @@ var gotoPage = function(code){
 var getClassID = function(arr, ind){
 	return arr[ind][0];
 };
+
 betterEdline.prototype.refresh = function(){
 	localStorage.bedl = JSON.stringify(this.things);
 	localStorage.bedlind = 0;
@@ -116,10 +138,11 @@ betterEdline.prototype.refresh = function(){
 betterEdline.prototype.addrowtext = function(id, text){
 	this.container.eq(id).children().eq(0).html(text);
 };
+
 betterEdline.prototype.showGrades = function(){
 	for(id in this.things){
 		var ob = this.things[id];
-		this.addrowtext(ob[1], ob[2] ? this.util.getClassGrade(ob[2]) + "%" : "? (?%)");
+		this.addrowtext(ob[1], this.util.letterAndPct(ob[2]));
 	}
 };
 var iClass;
@@ -130,18 +153,18 @@ betterEdline.prototype.showClassDetails = function(classind){
 			data = this.things[i];
 	if(!data) return;
 	var cl = data[2];
-	var grade = this.util.getClassGrade(cl);
+	if(!cl) return;
 	if(!iClass) iClass = $("<div>").appendTo($(".ed-tdEnd:first"));
 	iClass.html([
 		'Teacher: {0}',
-		'Class: <a href = "javascript:rlViewItm(\'{2}\')">{1} ({2})</a>',
-		'Grade: {4} ({3})',
+		'Class: <a href = "javascript:rlViewItm(\'{4}\')">{1} ({2})</a>',
+		'Grade: {3}',
 	].join("<br>").format(
 		cl.teacher,
 		cl.name,
 		cl.id,
-		grade,
-		this.util.pctToLetter(grade)
+		this.util.letterAndPct(cl),
+		data[0]
 	));
 };
 $(document).ready(function(){
@@ -160,11 +183,24 @@ $(document).ready(function(){
 		window.beobj = new betterEdline();
 		beobj.load();
 		beobj.addrowtext(0, '<strong>Grade</strong> <a id = "bedlref"> &lt;refresh&gt;</a>');
-		$("#bedlref").click(function(){beobj.refresh();});
 		beobj.showGrades();
+
+		$("#bedlref").click(function(){beobj.refresh();});
+
 		$('.ed-formTable').eq(2).find("tbody > tr:gt(0)")
 			.click(function(){
 				beobj.showClassDetails($(this).index());
-			});
+			})
+			;
+
+		$('.ed-formTable').eq(2).find("tbody > tr > td:first-child").eq(0)
+			.attr("width", "15%");
+
+		const style = (".bedlHover {background-color: #CCC;}");
+		var styleelem = document.createElement('style');
+		styleelem.type = 'text/css';
+		styleelem.innerHTML = style;
+		document.getElementsByTagName('head')[0]
+			.appendChild(styleelem);
 	}
 });

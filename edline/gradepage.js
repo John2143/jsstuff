@@ -15,10 +15,9 @@ var doRefresh = function(){
 	classdata.id = classnamedata[2];
 	classdata.name = classnamedata[1];
 
-	classdata.school = {};
 	const classstr = gradetab.eq(1).find("tbody > tr:last-child > td:last-child").html();
-	classdata.school.name = /(.+) \(/.exec(classstr)[1];
-	classdata.school.id = /\((\d+)\)/.exec(classstr)[1];
+	classdata.schoolname = /(.+) \(/.exec(classstr)[1];
+	classdata.schoolid = /\((\d+)\)/.exec(classstr)[1];
 	classdata.categories = {};
 	gradetab.eq(2).children().find("tbody > tr:gt(0):lt(-1)").each(function(){
 		var $t = $(this).children();
@@ -39,6 +38,7 @@ var doRefresh = function(){
 			grades: []
 		};
 	});
+	classdata.grade = gradetab.eq(2).children().find("tbody > tr:last-child > td:last-child").html();
 	gradetab.eq(3).find("tbody > tr > td > table > tbody > tr:gt(1)").each(function(){
 		var $t = $(this).find("td");
 		if(!$t.eq(2)[0]) return;
