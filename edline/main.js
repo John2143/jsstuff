@@ -1,21 +1,24 @@
+var GRADE_ALPHA = .3;
+
 var regex_trim = /\w.*\w/;
 var gradeBorders = [
-	100.01, "-",
-	96.21, "A+",
-	92.88, "A",
-	89.55, "A-",
-	86.21, "B+",
-	82.88, "B",
-	79.55, "B-",
-	76.21, "C+",
-	72.88, "C",
-	69.55, "C-",
-	66.21, "D+",
-	62.88, "D",
-	59.55, "D-",
-	39.70, "E+",
-	19.85, "E",
-	0, "E-"
+	1.0001, "-",
+	.9621, "A+",
+	.9288, "A",
+	.8955, "A-",
+	.8621, "B+",
+	.8288, "B",
+	.7955, "B-",
+	.7621, "C+",
+	.7288, "C",
+	.6955, "C-",
+	.6621, "D+",
+	.6288, "D",
+	.5955, "D-",
+	.3970, "E+",
+	.1985, "E",
+	.001, "E-",
+	0, "0"
 ];
 var gradeBorderVals = [], gradeBorderLetters = [];
 for (var i = 0; i < gradeBorders.length; i++)
@@ -46,7 +49,7 @@ var util = {
 				totalw += c.weight;
 			}
 		}
-		return (this.getPct(total, totalw) * 100).toFixed(2);
+		return (this.getPct(total, totalw));
 	},
 	pctToLetter: function(pct){
 		for (var i = 0; i < gradeBorders.length; i++)
@@ -62,15 +65,20 @@ var util = {
 			return "!!" + gradeletter + " > " + classgrade + "!!";
 		return gradeletter;
 	},
-	letterAndPct: function(cl, format){
+	letterAndPct: function(cl, nolerp){
 		const pct = this.getClassGrade(cl);
-		return (format || "{0} ({1}%)").format(
-			this.getDiscrepancy(
-				this.pctToLetter(pct),
-				cl.grade
-			), 
-			pct
+		var str = "{0} ({1}%)".format(
+			this.pctToLetter(pct),
+			(pct*100).toFixed(2)
 		);
+		if(!nolerp)
+			str = $("<span>")
+				.html(str)
+				.css("background-color",
+					this.gradeLerp(pct).RGB(GRADE_ALPHA)
+				)
+				.prop("outerHTML")
+		return str;
 	},
 	formatGrade: function(pts, ptsmx, pct){
 		return "{0}/{1} ({2}%)".format(
@@ -209,7 +217,8 @@ betterEdline.prototype.addrowtext = function(id, text){
 betterEdline.prototype.showGrades = function(){
 	for(id in this.things){
 		var ob = this.things[id];
-		this.addrowtext(ob[1], this.util.letterAndPct(ob[2]));
+		if(ob[2])
+			this.addrowtext(ob[1], this.util.letterAndPct(ob[2]));
 	}
 };
 
@@ -219,13 +228,17 @@ betterEdline.prototype.showCategoryGrade = function(unused__, cl){
 		var assgn = cl[i];
 		var pct = this.util.getPct(assgn.points, assgn.maxpoints);
 		$("<tr>")
+			.append($("<td>").html(
+				this.util.pctToLetter(pct)
+			))
 			.append($("<td>").html(assgn.name))
-			.append($("<td>").html(this.util.formatGrade(assgn.points, assgn.maxpoints, pct)))
-			.appendTo(div)
+			.append($("<td>").html(
+				this.util.formatGrade(assgn.points, assgn.maxpoints, pct)
+			))
 			.css("background-color", 
-				this.util.gradeLerp(pct).RGB(.3)
+				this.util.gradeLerp(pct).RGB(GRADE_ALPHA)
 			)
-		;
+		.appendTo(div);
 	}
 };
 
@@ -242,8 +255,8 @@ betterEdline.prototype.showClassDetails = function(classind){
 	iClass.html([
 		'Teacher: {0}',
 		'Class: <a href = "javascript:rlViewItm(\'{4}\')">{1} ({2})</a>',
-		'Grade: {3}',
-		'Categories: <br/><table id="bedlCategories" cellspacing=0 cellpadding=0>{5}</table><hr/><table id = "bedlGrades"></table>',
+		'Grade: <span>{3}</span>',
+		'Categories: <br/><table border id="bedlCategories" cellspacing=0 cellpadding=0>{5}</table><hr/><table id = "bedlGrades"></table>',
 	].join("<br>").format(
 		cl.teacher,
 		cl.name,
@@ -257,11 +270,10 @@ betterEdline.prototype.showClassDetails = function(classind){
 	for(i in cl.categories){
 		var cat = cl.categories[i];
 		trs.eq(0).append($("<td>").html(i));
-		console.log(i);
 		var pct = this.util.getPct(cat.points, cat.maxpoints);
 		trs.eq(1).append($("<td>")
 			.css("background-color", 
-				this.util.gradeLerp(pct).RGB(.3)
+				this.util.gradeLerp(pct).RGB(GRADE_ALPHA)
 			)
 			.html(
 				this.util.formatGrade(cat.points, cat.maxpoints, pct)
@@ -272,6 +284,7 @@ betterEdline.prototype.showClassDetails = function(classind){
 		);
 	}
 };
+
 $(document).ready(function(){
 	var docreate = true;
 	if(localStorage.bedlind) {
@@ -285,7 +298,7 @@ $(document).ready(function(){
 	if(docreate) {
 		delete localStorage.bedlind;
 		delete localStorage.bedl;
-		var beobj = new betterEdline();
+		window.beobj = new betterEdline();
 		beobj.load();
 		beobj.addrowtext(0, '<strong>Grade</strong> <a id = "bedlref"> &lt;refresh&gt;</a>');
 		beobj.showGrades();
@@ -307,5 +320,13 @@ $(document).ready(function(){
 		styleelem.innerHTML = style;
 		document.getElementsByTagName('head')[0]
 			.appendChild(styleelem);
+		$("#ed-pageFooter").append($("<div>")
+			.append($("<a>")
+				.html("Clear local storage")
+				.click(function(){
+					localStorage.clear();
+				})
+			)
+		);
 	}
 });
