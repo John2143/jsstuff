@@ -1,6 +1,6 @@
 var regex_trim = /\w.*\w/;
 var gradeBorders = [
-	100.01, "I",
+	100.01, "-",
 	96.21, "A+",
 	92.88, "A",
 	89.55, "A-",
@@ -32,6 +32,9 @@ var util = {
 	check: function(ctd){
 		return this.trim(ctd.eq(5).html()) === "Current Assignments Report";
 	},
+	getPct: function(a, b){
+		return b === 0 ? 1.01 : a/b;
+	},
 	getClassGrade: function(cd){
 		var cat = cd.categories;
 		var total = 0;
@@ -43,8 +46,7 @@ var util = {
 				totalw += c.weight;
 			}
 		}
-		if (totalw === 0) return "100.01";
-		return (total*100/totalw).toFixed(2);
+		return (this.getPct(total, totalw) * 100).toFixed(2);
 	},
 	pctToLetter: function(pct){
 		for (var i = 0; i < gradeBorders.length; i++)
@@ -54,7 +56,7 @@ var util = {
 		return "?";
 	},
 	getDiscrepancy: function(gradeletter, classgrade){
-		if(!classgrade || gradeletter == "I") return gradeletter;
+		if(!classgrade || gradeletter == gradeBorderLetters[0]) return gradeletter;
 		const gl = gradeletter[0];
 		if(gl != classgrade)
 			return "!!" + gradeletter + " > " + classgrade + "!!";
@@ -71,7 +73,58 @@ var util = {
 		);
 	}
 };
-if (!String.prototype.format) {
+if (!Math.clamp) {
+	Math.clamp = function(x,a,b) {
+		return this.max(a, this.min(x, b));
+	};
+	Number.prototype.clamp = function(a, b) {
+		return Math.clamp(this, a, b);
+	};
+}
+if (!Math.lerp) {
+	Math.lerp = function(a, b, t) {
+		return a + t.clamp(0,1) * (b - a);
+	};
+}
+window.Color = function(r, g, b) { //Color library
+	if(g === undefined){
+		this.bits = r;
+		r -= (this.r = r >> 0x10) << 0x10;
+		this.b = r - ((this.g = (r >> 0x8)) << 0x8);
+	}else{
+		this.r = r;
+		this.g = g;
+		this.b = b;
+		this.bits = (r << 0x10) + (g << 0x8) + b;
+	}
+};
+Color.prototype.toString = function(pre) {
+	var str = Number(this.bits).toString(16).toUpperCase();
+	return (pre ? pre === true ? '' :  pre : '#') + str.pad0(6);
+};
+Color.prototype.RGB = function() {
+	return "rgb(" + [this.r, this.g, this.b].join(", ") + ")";
+};
+
+Color.lerp = function(a, b, t) {
+	return new Color(
+		Math.floor(Math.lerp(a.r, b.r, t)),
+		Math.floor(Math.lerp(a.g, b.g, t)),
+		Math.floor(Math.lerp(a.b, b.b, t))
+	);
+};
+Color.grey = Color.gray = function(pct) {return Color.lerp(new Color(0), new Color(0xffffff), pct);};
+//end color library
+if (!String.prototype.pad0)
+	String.prototype.pad0 = function(n) {
+		return '0'.repeat(n-this.length) + this;
+	};
+if (!String.prototype.repeat) { //from stackoverflow
+	String.prototype.repeat = function(times) {
+	   return (new Array(times + 1)).join(this);
+	};
+}
+if (!String.prototype.format) { //from stackoverflow
     String.prototype.format = function() {
         var str = this.toString();
         if (!arguments.length)
@@ -145,6 +198,11 @@ betterEdline.prototype.showGrades = function(){
 		this.addrowtext(ob[1], this.util.letterAndPct(ob[2]));
 	}
 };
+
+betterEdline.prototype.showCategoryGrade = function(i, cl){
+	console.log(i, cl);
+};
+
 var iClass;
 betterEdline.prototype.showClassDetails = function(classind){
 	var data;
@@ -159,13 +217,40 @@ betterEdline.prototype.showClassDetails = function(classind){
 		'Teacher: {0}',
 		'Class: <a href = "javascript:rlViewItm(\'{4}\')">{1} ({2})</a>',
 		'Grade: {3}',
+		'Categories: <br/><table id="bedlCategories" cellspacing=0 cellpadding=0>{5}<table><div id = "bedlGrades"></div>',
 	].join("<br>").format(
 		cl.teacher,
 		cl.name,
 		cl.id,
 		this.util.letterAndPct(cl),
-		data[0]
+		data[0],
+		'<tr></tr>'.repeat(2) //.repeat(x) -> x = number of rows
 	));
+	var trs = $("#bedlCategories tr");
+	var bed = this;
+	for(i in cl.categories){
+		var cat = cl.categories[i];
+		trs.eq(0).append($("<td>").html(i));
+		var pct = this.util.getPct(cat.points, cat.maxpoints);
+		console.log(i);
+		trs.eq(1).append($("<td>")
+			.css("background-color", Color.lerp(
+				new Color(0xff0000),
+				new Color(0x00dd11),
+				(pct*2 - 1).clamp(0,1)
+			))
+			.html(
+				"{0}/{1} ({2}%)".format(
+					cat.points,
+					cat.maxpoints,
+					(pct*100).toFixed(1)
+				)
+			)
+			.click(function(k, cl){
+				bed.showCategoryGrade(k, cl);
+			}.bind(this, i, cat.grades))
+		);
+	}
 };
 $(document).ready(function(){
 	var docreate = true;
@@ -180,7 +265,7 @@ $(document).ready(function(){
 	if(docreate) {
 		delete localStorage.bedlind;
 		delete localStorage.bedl;
-		window.beobj = new betterEdline();
+		var beobj = new betterEdline();
 		beobj.load();
 		beobj.addrowtext(0, '<strong>Grade</strong> <a id = "bedlref"> &lt;refresh&gt;</a>');
 		beobj.showGrades();
