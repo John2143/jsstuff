@@ -1,23 +1,23 @@
-var GRADE_ALPHA = .3;
+var GRADE_ALPHA = 0.3;
 
 var regex_trim = /\w.*\w/;
 var gradeBorders = [
 	1.0001, "-",
-	.9621, "A+",
-	.9288, "A",
-	.8955, "A-",
-	.8621, "B+",
-	.8288, "B",
-	.7955, "B-",
-	.7621, "C+",
-	.7288, "C",
-	.6955, "C-",
-	.6621, "D+",
-	.6288, "D",
-	.5955, "D-",
-	.3970, "E+",
-	.1985, "E",
-	.001, "E-",
+	0.9621, "A+",
+	0.9288, "A",
+	0.8955, "A-",
+	0.8621, "B+",
+	0.8288, "B",
+	0.7955, "B-",
+	0.7621, "C+",
+	0.7288, "C",
+	0.6955, "C-",
+	0.6621, "D+",
+	0.6288, "D",
+	0.5955, "D-",
+	0.3970, "E+",
+	0.1985, "E",
+	0.001, "E-",
 	0, "0"
 ];
 var gradeBorderVals = [], gradeBorderLetters = [];
@@ -44,7 +44,6 @@ var util = {
 		var totalw = 0;
 		for (i in cat){
 			var c = cat[i];
-			console.log(c.points, c.name, i);
 			if(c.maxpoints > 0 && c.weight > 0){
 				total += (c.points/c.maxpoints)*(c.weight);
 				totalw += c.weight;
@@ -78,7 +77,7 @@ var util = {
 				.css("background-color",
 					this.gradeLerp(pct).RGB(GRADE_ALPHA)
 				)
-				.prop("outerHTML")
+				.prop("outerHTML");
 		return str;
 	},
 	formatGrade: function(pts, ptsmx, pct){
@@ -126,7 +125,8 @@ Color.prototype.toString = function(pre) {
 	return (pre ? pre === true ? '' :  pre : '#') + str.pad0(6);
 };
 Color.prototype.RGB = function(a) {
-	return "rgb" + (a ? "a" : "") + "(" + [this.r, this.g, this.b].join(", ") + (a ? ", " + a : "") + ")";
+	var isa = a !== undefined;
+	return "rgb" + (isa ? "a" : "") + "(" + [this.r, this.g, this.b].join(", ") + (isa ? ", " + a : "") + ")";
 };
 
 Color.lerp = function(a, b, t) {
@@ -144,7 +144,7 @@ if (!String.prototype.pad0)
 	};
 if (!String.prototype.repeat) { //from stackoverflow
 	String.prototype.repeat = function(times) {
-	   return (new Array(times + 1)).join(this);
+		return (new Array(times + 1)).join(this);
 	};
 }
 if (!String.prototype.format) { //from stackoverflow
@@ -281,10 +281,12 @@ betterEdline.prototype.showClassDetails = function(classind){
 		cl.id,
 		this.util.letterAndPct(cl),
 		data[0],
-		'<tr></tr>'.repeat(2) //.repeat(x) -> x = number of rows
+		'<tr></tr>'.repeat(5) //.repeat(x) -> x = number of rows
 	));
 	var trs = $("#bedlCategories tr");
-	var bed = this;
+	const categoryNames = ["Name", "Grade", "Z", "Upcoming", "Graded/Excused"];
+	for(i = 0; i < categoryNames.length; i++)
+		trs.eq(i).append($("<td>").html(categoryNames[i]));
 	for(i in cl.categories){
 		var cat = cl.categories[i];
 		trs.eq(0).append($("<td>").html(i));
@@ -296,10 +298,47 @@ betterEdline.prototype.showClassDetails = function(classind){
 			.html(
 				this.util.formatGrade(cat.points, cat.maxpoints, pct)
 			)
-			.click(function(k, cl){
-				bed.showCategoryGrade(k, cl);
-			}.bind(this, i, cat.grades))
 		);
+
+		var z=0, upcoming=0, excused=0, zero=0, graded=0;
+		for(v in cat.grades) {
+			var assgn = cat.grades[v];
+			switch(assgn.points){
+				case "Z":
+					z++; break;
+				case "U":
+					upcoming++; break;
+				case "X":
+					excused++; break;
+				case 0:
+					zero++; break;
+				default: //Anything with a positive grade
+					graded++; break;
+			}
+		}
+		trs.eq(2).append($("<td>")
+			.html(z)
+			.css("background-color", new Color(0xff00000).RGB(z > 0 ? GRADE_ALPHA : 0))
+		);
+		trs.eq(3).append($("<td>")
+			.html(upcoming)
+		);
+		trs.eq(4).append($("<td>")
+			.html(graded + " + " + excused)
+		);
+		trs.find("td:last-child")
+			.click(function(k, cl){
+				this.showCategoryGrade(k, cl);
+			}.bind(this, i, cat.grades));
+			//.hover(function(){
+				//var $t = $(this);
+				//$t.parent().addClass("bedlHover");
+				//$t.parent().parent().find("tr > td:nth-child(" + ($t.index() + 1) + ")").addClass("bedlHover");
+			//}, function(){
+				//var $t = $(this);
+				//$t.parent().removeClass("bedlHover");
+				//$t.parent().parent().find("tr > td:nth-child(" + ($t.index() + 1) + ")").removeClass("bedlHover");
+			//});
 	}
 };
 
@@ -332,7 +371,7 @@ $(document).ready(function(){
 		$('.ed-formTable').eq(2).find("tbody > tr > td:first-child").eq(0)
 			.attr("width", "15%");
 
-		const style = (".bedlHover {background-color: #CCC;}");
+		const style = (".bedlHover {background-color: #CCC !important;}");
 		var styleelem = document.createElement('style');
 		styleelem.type = 'text/css';
 		styleelem.innerHTML = style;

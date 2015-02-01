@@ -51,7 +51,6 @@ var doRefresh = function(){
 		var $t = $(this).find("td");
 		if(!$t.eq(2)[0]) return;
 		const catname = $t.eq(3).html();
-		console.log($t.eq(5).html() || "NONNE");
 		classdata.categories[catname].grades.push({
 			name: $t.eq(1).html(),
 			date: $t.eq(2).html(),
