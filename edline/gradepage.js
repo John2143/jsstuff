@@ -2,6 +2,14 @@ var iframe;
 var iframetabs;
 var redirect = false;
 var hasRefreshed = false;
+var getnum = function(str) {
+	str = String(str);
+	if(str.toUpperCase() == "Z") return "Z";
+	else if(str.toUpperCase() == "X") return "X";
+	var s = Number(str);
+	if(isNaN(s)) return "U";
+	else return s;
+}
 var doRefresh = function(){
 	if(hasRefreshed) return;
 	hasRefreshed = true;
@@ -32,9 +40,9 @@ var doRefresh = function(){
 			ptsmax = 0;
 		}
 		classdata.categories[$t.eq(0).html()] = {
-			weight: Number($t.eq(1).html()),
-			points: Number(pts),
-			maxpoints: Number(ptsmax),
+			weight: getnum($t.eq(1).html()),
+			points: getnum(pts),
+			maxpoints: getnum(ptsmax),
 			grades: []
 		};
 	});
@@ -43,12 +51,13 @@ var doRefresh = function(){
 		var $t = $(this).find("td");
 		if(!$t.eq(2)[0]) return;
 		const catname = $t.eq(3).html();
+		console.log($t.eq(5).html() || "NONNE");
 		classdata.categories[catname].grades.push({
 			name: $t.eq(1).html(),
 			date: $t.eq(2).html(),
-			weight: Number($t.eq(4).html()),
-			points: Number($t.eq(5).html()),
-			maxpoints: Number($t.eq(6).html())
+			weight: getnum($t.eq(4).html()),
+			points: getnum($t.eq(5).html()),
+			maxpoints: getnum($t.eq(6).html())
 		});
 	});
 	localStorage["bedl" + docid] = JSON.stringify(classdata);

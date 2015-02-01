@@ -44,6 +44,7 @@ var util = {
 		var totalw = 0;
 		for (i in cat){
 			var c = cat[i];
+			console.log(c.points, c.name, i);
 			if(c.maxpoints > 0 && c.weight > 0){
 				total += (c.points/c.maxpoints)*(c.weight);
 				totalw += c.weight;
@@ -87,7 +88,7 @@ var util = {
 			(pct*100).toFixed(1)
 		);
 	},
-	gradeLerp: function(pct){ 
+	gradeLerp: function(pct){
 		return Color.lerp(
 			new Color(0xff0000),
 			new Color(0x00dd11),
@@ -226,19 +227,36 @@ betterEdline.prototype.showCategoryGrade = function(unused__, cl){
 	var div = $("#bedlGrades").empty();
 	for(var i in cl) {
 		var assgn = cl[i];
-		var pct = this.util.getPct(assgn.points, assgn.maxpoints);
-		$("<tr>")
-			.append($("<td>").html(
-				this.util.pctToLetter(pct)
-			))
+		var bg, letter, pctge, alpha = GRADE_ALPHA;
+		switch(assgn.points){
+			case "Z":
+				pctge = "Missing: -{0} points".format(assgn.maxpoints);
+				letter = "Z";
+				bg = new Color(0xff7700);
+				break;
+			case "X":
+				pctge = "Excused: {0} points".format(assgn.maxpoints);
+				letter = "X";
+				bg = new Color(0x4a4aff);
+				break;
+			case "U":
+				pctge = "Ungraded: {0} points".format(assgn.maxpoints);
+				letter = "~";
+				bg = new Color(0xbbbbbb);
+				break;
+			default:
+				var pct = this.util.getPct(assgn.points, assgn.maxpoints);
+				pctge = this.util.formatGrade(assgn.points, assgn.maxpoints, pct);
+				letter = this.util.pctToLetter(pct);
+				bg = this.util.gradeLerp(pct);
+				break;
+		}
+		var tr = $("<tr>")
+			.append($("<td>").html(letter))
 			.append($("<td>").html(assgn.name))
-			.append($("<td>").html(
-				this.util.formatGrade(assgn.points, assgn.maxpoints, pct)
-			))
-			.css("background-color", 
-				this.util.gradeLerp(pct).RGB(GRADE_ALPHA)
-			)
-		.appendTo(div);
+			.append($("<td>").html(pctge))
+			.css("background-color", bg.RGB(alpha))
+			.appendTo(div);
 	}
 };
 
@@ -272,7 +290,7 @@ betterEdline.prototype.showClassDetails = function(classind){
 		trs.eq(0).append($("<td>").html(i));
 		var pct = this.util.getPct(cat.points, cat.maxpoints);
 		trs.eq(1).append($("<td>")
-			.css("background-color", 
+			.css("background-color",
 				this.util.gradeLerp(pct).RGB(GRADE_ALPHA)
 			)
 			.html(
