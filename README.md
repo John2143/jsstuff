@@ -4,9 +4,11 @@ Better edline -> edline/
 ========================
 ####Type: Userscript
 #####Tested in chrome with ecmascript5 using tampermonkey
-####Details: 
+####Details:
 
-Screenshot: ![A screenshot](/_edline_screen1.png?raw=true "The 'private reports' page")
+Screenshots:
+![A screenshot](/_edline_screen1.png?raw=true "The 'private reports' page")
+![A screenshot](/_edline_screen2.png?raw=true "The 'private reports' page")
 
 This is a pair of userscripts that I use to make edline more usable.  Added functionality:
 - Shows the grade next to the class on the private report menu
@@ -15,7 +17,7 @@ This is a pair of userscripts that I use to make edline more usable.  Added func
 
 ####Installation:
 1. Create a two userscripts with the header defined below
-2. Give them @match arguments of:  
+2. Give them @match arguments of:
   - main.js -> `https://www.edline.net/UserDocList.page`
   - gradepage.js -> `https://www.edline.net/pages/*/*`
 3. Either:
@@ -42,7 +44,7 @@ One Way Reddit -> onewayreddit.js
 #####Tested in chrome with ecmascript5 using tampermonkey
 ####Details:
 - Click the rank button on reddit to hide submissions.
-- `b` to reload the plugin (for use with RES infinite mode 
+- `b` to reload the plugin (for use with RES infinite mode
 - `d` to temporarily unhide all hidden submissions
 
 ####Installation
