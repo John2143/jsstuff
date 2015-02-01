@@ -1,7 +1,9 @@
-This is a collection of random javascript things that I've done over time.
+#This is a collection of random javascript things that I've done over time.
 
-##Better edline -> edline/
-#Type: Userscript
+Better edline -> edline/
+========================
+
+###Type: Userscript
 
 Screenshot: ![A screenshot](/_edline_screen1.png?raw=true "The 'private reports' page")
 
