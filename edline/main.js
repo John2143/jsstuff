@@ -71,6 +71,20 @@ var util = {
 			), 
 			pct
 		);
+	},
+	formatGrade: function(pts, ptsmx, pct){
+		return "{0}/{1} ({2}%)".format(
+			pts,
+			ptsmx,
+			(pct*100).toFixed(1)
+		);
+	},
+	gradeLerp: function(pct){ 
+		return Color.lerp(
+			new Color(0xff0000),
+			new Color(0x00dd11),
+			(pct*2 - 1).clamp(0,1)
+		);
 	}
 };
 if (!Math.clamp) {
@@ -102,8 +116,8 @@ Color.prototype.toString = function(pre) {
 	var str = Number(this.bits).toString(16).toUpperCase();
 	return (pre ? pre === true ? '' :  pre : '#') + str.pad0(6);
 };
-Color.prototype.RGB = function() {
-	return "rgb(" + [this.r, this.g, this.b].join(", ") + ")";
+Color.prototype.RGB = function(a) {
+	return "rgb" + (a ? "a" : "") + "(" + [this.r, this.g, this.b].join(", ") + (a ? ", " + a : "") + ")";
 };
 
 Color.lerp = function(a, b, t) {
@@ -199,8 +213,20 @@ betterEdline.prototype.showGrades = function(){
 	}
 };
 
-betterEdline.prototype.showCategoryGrade = function(i, cl){
-	console.log(i, cl);
+betterEdline.prototype.showCategoryGrade = function(unused__, cl){
+	var div = $("#bedlGrades").empty();
+	for(var i in cl) {
+		var assgn = cl[i];
+		var pct = this.util.getPct(assgn.points, assgn.maxpoints);
+		$("<tr>")
+			.append($("<td>").html(assgn.name))
+			.append($("<td>").html(this.util.formatGrade(assgn.points, assgn.maxpoints, pct)))
+			.appendTo(div)
+			.css("background-color", 
+				this.util.gradeLerp(pct).RGB(.3)
+			)
+		;
+	}
 };
 
 var iClass;
@@ -217,7 +243,7 @@ betterEdline.prototype.showClassDetails = function(classind){
 		'Teacher: {0}',
 		'Class: <a href = "javascript:rlViewItm(\'{4}\')">{1} ({2})</a>',
 		'Grade: {3}',
-		'Categories: <br/><table id="bedlCategories" cellspacing=0 cellpadding=0>{5}<table><div id = "bedlGrades"></div>',
+		'Categories: <br/><table id="bedlCategories" cellspacing=0 cellpadding=0>{5}</table><hr/><table id = "bedlGrades"></table>',
 	].join("<br>").format(
 		cl.teacher,
 		cl.name,
@@ -231,20 +257,14 @@ betterEdline.prototype.showClassDetails = function(classind){
 	for(i in cl.categories){
 		var cat = cl.categories[i];
 		trs.eq(0).append($("<td>").html(i));
-		var pct = this.util.getPct(cat.points, cat.maxpoints);
 		console.log(i);
+		var pct = this.util.getPct(cat.points, cat.maxpoints);
 		trs.eq(1).append($("<td>")
-			.css("background-color", Color.lerp(
-				new Color(0xff0000),
-				new Color(0x00dd11),
-				(pct*2 - 1).clamp(0,1)
-			))
+			.css("background-color", 
+				this.util.gradeLerp(pct).RGB(.3)
+			)
 			.html(
-				"{0}/{1} ({2}%)".format(
-					cat.points,
-					cat.maxpoints,
-					(pct*100).toFixed(1)
-				)
+				this.util.formatGrade(cat.points, cat.maxpoints, pct)
 			)
 			.click(function(k, cl){
 				bed.showCategoryGrade(k, cl);
