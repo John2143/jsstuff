@@ -161,7 +161,6 @@ if (!String.prototype.format) { //from stackoverflow
 }
 
 var betterEdline = function(){
-	this.hasGrades = false;
 	this.container = $(".ed-formTable")
 			.eq(2) //Always second table
 			.find("tbody > tr:lt(14)");
@@ -261,6 +260,7 @@ betterEdline.prototype.showCategoryGrade = function(unused__, cl){
 };
 
 var iClass;
+const categoryNames = ["Name", "Weight", "Grade", "Z", "Upcoming", "Graded/Excused"];
 betterEdline.prototype.showClassDetails = function(classind){
 	var data;
 	for (i in this.things)
@@ -279,19 +279,20 @@ betterEdline.prototype.showClassDetails = function(classind){
 		cl.teacher,
 		cl.name,
 		cl.id,
-		this.util.letterAndPct(cl),
+		this.util.letterAndPct(categoryNames.length),
 		data[0],
 		'<tr></tr>'.repeat(5) //.repeat(x) -> x = number of rows
 	));
 	var trs = $("#bedlCategories tr");
-	const categoryNames = ["Name", "Grade", "Z", "Upcoming", "Graded/Excused"];
 	for(i = 0; i < categoryNames.length; i++)
 		trs.eq(i).append($("<td>").html(categoryNames[i]));
 	for(i in cl.categories){
 		var cat = cl.categories[i];
-		trs.eq(0).append($("<td>").html(i));
+		var ind = 0;
+		trs.eq(ind++).append($("<td>").html(i));
+		trs.eq(ind++).append($("<td>").html(cat.weight));
 		var pct = this.util.getPct(cat.points, cat.maxpoints);
-		trs.eq(1).append($("<td>")
+		trs.eq(ind++).append($("<td>")
 			.css("background-color",
 				this.util.gradeLerp(pct).RGB(GRADE_ALPHA)
 			)
@@ -316,14 +317,14 @@ betterEdline.prototype.showClassDetails = function(classind){
 					graded++; break;
 			}
 		}
-		trs.eq(2).append($("<td>")
+		trs.eq(ind++).append($("<td>")
 			.html(z)
 			.css("background-color", new Color(0xff00000).RGB(z > 0 ? GRADE_ALPHA : 0))
 		);
-		trs.eq(3).append($("<td>")
+		trs.eq(ind++).append($("<td>")
 			.html(upcoming)
 		);
-		trs.eq(4).append($("<td>")
+		trs.eq(ind++).append($("<td>")
 			.html(graded + " + " + excused)
 		);
 		trs.find("td:last-child")
