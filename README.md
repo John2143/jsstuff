@@ -6,10 +6,10 @@ Better edline -> edline/
 #####Tested in chrome with ecmascript5 using tampermonkey
 ####Details:
 
-Screenshots:
-![A screenshot](/_edline_screen1.png?raw=true "(((OLD SCREENSHOT))) The different colors that grades can have")
-![A screenshot](/_edline_screen2.png?raw=true "Individual class grades")
-![A screenshot](/_edline_screen3.png?raw=true "The category metrics screen")
+Screenshots:  
+![A screenshot](/_edline_screen1.png?raw=true "(((OLD SCREENSHOT))) The different colors that grades can have")  
+![A screenshot](/_edline_screen2.png?raw=true "Individual class grades")  
+![A screenshot](/_edline_screen3.png?raw=true "The category metrics screen")  
 
 This is a pair of userscripts that I use to make edline more usable.  Added functionality:
 - Shows the grade next to the class on the private report menu
