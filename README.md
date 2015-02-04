@@ -7,14 +7,23 @@ Better edline -> edline/
 ####Details:
 
 Screenshots:
-![A screenshot](/_edline_screen1.png?raw=true "The 'private reports' page")
-![A screenshot](/_edline_screen2.png?raw=true "The 'private reports' page")
+![A screenshot](/_edline_screen1.png?raw=true "(((OLD SCREENSHOT))) The different colors that grades can have")
+![A screenshot](/_edline_screen2.png?raw=true "Individual class grades")
+![A screenshot](/_edline_screen3.png?raw=true "The category metrics screen")
 
 This is a pair of userscripts that I use to make edline more usable.  Added functionality:
 - Shows the grade next to the class on the private report menu
 - Adds colors corresponding to grades
 - Adds assignments viewing menu where they are sorted by category
-
+- Differentiates + and - grades (A+, B-, 0, etc.)
+- Upcoming assignments, excused assignments, late assignments, and graded assignments all sorted with color
+- Many metrics
+  - Assignment grade (Letter + percent)
+  - Effect on overall grade
+    - How much it hurts the overall grade
+	- The total amount that it benifits your grade
+	- How much of your grade each point is worth
+	- How much you could gain if you scored a higher grade
 ####Installation:
 1. Create a two userscripts with the header defined below
 2. Give them @match arguments of:
