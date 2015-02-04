@@ -222,39 +222,60 @@ betterEdline.prototype.showGrades = function(){
 	}
 };
 
-betterEdline.prototype.showCategoryGrade = function(unused__, cl){
+betterEdline.prototype.showCategoryGrade = function(totalw, cat){
 	var div = $("#bedlGrades").empty();
-	for(var i in cl) {
-		var assgn = cl[i];
-		var bg, letter, pctge, alpha = GRADE_ALPHA;
+	var catpct = (cat.points/cat.maxpoints);
+	for(var i in cat.grades) {
+		var assgn = cat.grades[i];
+		var bg, letter, pctge, pct, alpha = GRADE_ALPHA, grpct = undefined;
+		pct = 0;
 		switch(assgn.points){
 			case "Z":
 				pctge = "Missing: -{0} points".format(assgn.maxpoints);
 				letter = "Z";
+				pct = 0;
 				bg = new Color(0xff7700);
 				break;
 			case "X":
 				pctge = "Excused: {0} points".format(assgn.maxpoints);
 				letter = "X";
 				bg = new Color(0x4a4aff);
+				grpct = 0;
 				break;
 			case "U":
 				pctge = "Ungraded: {0} points".format(assgn.maxpoints);
 				letter = "~";
 				bg = new Color(0xbbbbbb);
+				grpct = 0;
 				break;
 			default:
-				var pct = this.util.getPct(assgn.points, assgn.maxpoints);
+				pct = this.util.getPct(assgn.points, assgn.maxpoints);
 				pctge = this.util.formatGrade(assgn.points, assgn.maxpoints, pct);
 				letter = this.util.pctToLetter(pct);
 				bg = this.util.gradeLerp(pct);
 				break;
 		}
+		var help = 0, hurt = 0, deltapt = 0;
+		if(grpct === undefined) {
+			grpct = assgn.maxpoints / cat.maxpoints;
+			if(totalw > cat.weight)
+				grpct *= (cat.weight/totalw);
+			help = grpct*pct;
+			hurt = grpct - help;
+			if(assgn.maxpoints > assgn.points)
+				deltapt = hurt/(assgn.maxpoints - assgn.points);
+		}
+
+		help = (help*100).toFixed(1); hurt = (hurt*100).toFixed(1); grpct = (grpct*100).toFixed(1), deltapt = (deltapt*100).toFixed(1);
+		var bgcol = bg.RGB(alpha);
 		var tr = $("<tr>")
-			.append($("<td>").html(letter))
-			.append($("<td>").html(assgn.name))
-			.append($("<td>").html(pctge))
-			.css("background-color", bg.RGB(alpha))
+			.append($("<td>").html(letter).css('background-color', bgcol))
+			.append($("<td>").html(assgn.name).css('background-color', bgcol))
+			.append($("<td>").html(pctge).css('background-color', bgcol))
+			.append($("<td>").html(grpct + "%").css('background-color', Color.lerp(new Color(0xffffff), new Color(0x0055ff), grpct/10).RGB(GRADE_ALPHA)))
+			.append($("<td>").html("+" + help + "%"))
+			.append($("<td>").html("-" + hurt + "%").css('background-color', Color.lerp(new Color(0xffffff), new Color(0xff3300), hurt/10).RGB(GRADE_ALPHA)))
+			.append($("<td>").html("+" + deltapt + "%/pt").css('background-color', Color.lerp(new Color(0xffffff), new Color(0xff22ff), deltapt/3).RGB(GRADE_ALPHA)))
 			.appendTo(div);
 	}
 };
@@ -279,15 +300,18 @@ betterEdline.prototype.showClassDetails = function(classind){
 		cl.teacher,
 		cl.name,
 		cl.id,
-		this.util.letterAndPct(categoryNames.length),
+		this.util.letterAndPct(cl),
 		data[0],
-		'<tr></tr>'.repeat(5) //.repeat(x) -> x = number of rows
+		'<tr></tr>'.repeat(categoryNames.length) //.repeat(x) -> x = number of rows
 	));
 	var trs = $("#bedlCategories tr");
 	for(i = 0; i < categoryNames.length; i++)
 		trs.eq(i).append($("<td>").html(categoryNames[i]));
+	var totalweight = 0;
 	for(i in cl.categories){
 		var cat = cl.categories[i];
+		if(cat.maxpoints > 0 && cat.weight > 0)
+			totalweight += cat.weight;
 		var ind = 0;
 		trs.eq(ind++).append($("<td>").html(i));
 		trs.eq(ind++).append($("<td>").html(cat.weight));
@@ -328,9 +352,9 @@ betterEdline.prototype.showClassDetails = function(classind){
 			.html(graded + " + " + excused)
 		);
 		trs.find("td:last-child")
-			.click(function(k, cl){
-				this.showCategoryGrade(k, cl);
-			}.bind(this, i, cat.grades));
+			.click(function(cat){
+				this.showCategoryGrade(totalweight, cat);
+			}.bind(this, cat));
 			//.hover(function(){
 				//var $t = $(this);
 				//$t.parent().addClass("bedlHover");
