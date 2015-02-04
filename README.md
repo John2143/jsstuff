@@ -24,6 +24,8 @@ This is a pair of userscripts that I use to make edline more usable.  Added func
 	- The total amount that it benifits your grade
 	- How much of your grade each point is worth
 	- How much you could gain if you scored a higher grade
+
+
 ####Installation:
 1. Create a two userscripts with the header defined below
 2. Give them @match arguments of:
