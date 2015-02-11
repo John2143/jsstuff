@@ -1,5 +1,5 @@
 #This is a collection of random javascript things that I've made over time.
-
+#Most of these things will require [Tampermonkey](https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo?hl=en) in chrome or [Greasemonkey](https://addons.mozilla.org/en-Us/firefox/addon/greasemonkey/) in firefox
 Better edline -> edline/
 ========================
 ####Type: Userscript
