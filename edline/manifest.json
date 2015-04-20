@@ -1,0 +1,21 @@
+
+{
+  "name": "Better Edline",
+  "description": "Creates a better interface for edline",
+  "version": "1.0",
+  "author": "John2143",
+  "background": {
+	"persistant": false
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://www.edline.net/UserDocList.page?*"],
+      "js": ["jq.js", "main.js"]
+    },
+    {
+      "matches": ["https://www.edline.net/pages/*/*"],
+      "js": ["jq.js", "gradepage.js"]
+    }
+  ],
+  "manifest_version": 2
+}

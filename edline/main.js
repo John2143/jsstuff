@@ -1,4 +1,3 @@
-'use strict';
 var util = {
 	regex_trim: /\w.*\w/,
 	trim: function(str){
@@ -201,7 +200,12 @@ betterEdline.prototype.load = function(){
 };
 
 var gotoPage = function(code){
-	rlViewItm(code);
+	if(typeof JQCHROME !== 'undefined'){//chrome extension
+		var s = document.createElement("script");
+		s.innerHTML = "rlViewItm('" + code + "');";
+		(document.head || document.body).appendChild(s);
+	}else//tampermonkey
+		rlViewItm(code);
 };
 var getClassID = function(arr, ind){
 	return arr[ind][0];
@@ -218,7 +222,7 @@ betterEdline.prototype.addrowtext = function(id, text){
 };
 
 betterEdline.prototype.showGrades = function(){
-	for(id in this.things){
+	for(var id in this.things){
 		var ob = this.things[id];
 		if(ob[2])
 			this.addrowtext(ob[1], this.util.letterAndPct(ob[2]));

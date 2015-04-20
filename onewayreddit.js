@@ -92,13 +92,14 @@ const style = (".OWRHidden {background-color: #EEE;}"); //Show visited as grey w
 var styleelem = document.createElement('style');
 styleelem.type = 'text/css';
 styleelem.innerHTML = style;
-$(document).ready(function(){
+$(document).load(function(){
 	owr.load();
 	owr.doinit();
 	document.getElementsByTagName('head')[0]
 		.appendChild(styleelem);
 	console.log("One way reddit loaded");
 });
+console.log("One way reddit activated");
 $(document).keyup(function(e){
 	var kc = e.keyCode;
 	if(kc == "66") //b
