@@ -7,6 +7,7 @@
 // @match        http://www.reddit.com/
 // @grant        none
 // ==/UserScript==
+console.log("WE DID IT");
 
 
 function oneWayReddit(mh){
