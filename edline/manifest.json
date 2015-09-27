@@ -2,8 +2,13 @@
 {
   "name": "Better Edline",
   "description": "Creates a better interface for edline",
-  "version": "1.0",
+  "version": "2.0",
   "author": "John2143",
+  "icons": {
+	"16": "icon16.ico",
+	"48": "icon48.ico",
+	"128": "icon128.ico"
+  },
   "background": {
 	"persistant": false
   },

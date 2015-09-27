@@ -22,7 +22,18 @@ var getCardFromURL = function(str){
 	return /market\/listings\/(\d+)\/([^#]+)/.exec(str);
 };
 
-var buyCardAjax = function(hashName, price, quantity, currency, cookies){
+var getLowestPrice = function(callback, hash, appid, currency){
+	jQuery.ajax({
+		type: "GET",
+		//http for simple gets
+		url: "http://steamcommunity.com/market/priceoverview/",
+		data: "market_hash_name=" + hash +
+				"&currency=" + currency +
+				"&appid=" + appid,
+		success: callback
+	});
+};
+var buyCardAjax = function(callback, hashName, price, quantity, currency, appid, cookies){
 	jQuery.ajax({
 		type: "POST",
 		//This may be contracted to /market/createbuyorder/ but it will not
@@ -32,7 +43,7 @@ var buyCardAjax = function(hashName, price, quantity, currency, cookies){
 
 		data: "sessionid=" + cookies.sessionid +
 				//appid 753 is steam
-				"&appid=753" +
+				"&appid=" + appid+
 				//Hash name has "+" where spaces are
 				"&market_hash_name=" + hashName +
 				//Price in cents of the currency ie:
@@ -43,10 +54,7 @@ var buyCardAjax = function(hashName, price, quantity, currency, cookies){
 				"&currency=" + currency,
 
 		//This function may cause all the data to not be garbage collected for a while
-		success: function(data){
-				console.log("Purchased card");
-			},
-
+		success: callback,
 		dataType: "application/x-www-form-urlencoded; charset=UTF-8",
 		xhrFields: {
 			//This is required to send many cookies which validate the purchase
@@ -55,27 +63,25 @@ var buyCardAjax = function(hashName, price, quantity, currency, cookies){
 	});
 }
 
-const delay = 500;
-var doBuyCardDelayed = function(i, cardHash, price, quant, curr, cookies){
-	setTimeout(function(){
-		buyCardAjax(cardHash, price, quant, curr, cookies);
-	}, i*delay);
-};
-
-function buyCards(set){
-	console.log("Trying to buy " + set.length + " cards");
-	var cookies = parseCookies();
-	set.each(function(i,obj){
-		var cardHash = getCardFromURL(obj.href)[2].replace(/%20/g,"+");
-		console.log("Buying " + cardHash);
-		var price = /\$(\d*)\.(\d+)/.exec(obj.innerHTML);
-		if(price){
-			price = Number(price[1] + price[2]);
-			doBuyCardDelayed(i, cardHash, price, 1, 1, cookies);
+var cards = [];
+jQuery(".unowned > .es_card_search").each(function(i,obj){
+	console.log("DOING THINGS ON " + i);
+	var cardHash = getCardFromURL(obj.href)[2].replace(/%20/g,"+");
+	getLowestPrice((function(hash, data){
+		if(!data || data.success === false){
+			console.log("error getting card");
 		}else{
-			console.log("Failed to get price");
+			cards.push({
+				hash: hash,
+				lowest: Number(
+					/(\d*)[.,]?(\d+)/
+					.exec(data.lowest_price)
+					.splice(1,2)
+					.join("")
+				),
+			});
+			console.log(cards);
 		}
-	});
-}
-buyCards(jQuery(".unowned > .es_card_search"));
-//buyCard(card[2].replace(/%20/g,"+"), 5, 1, 1, parseCookies());
+	}).bind(null, cardHash), cardHash, 753, 1);
+});
+buyCard(card[2].replace(/%20/g,"+"), 5, 1, 1, parseCookies());

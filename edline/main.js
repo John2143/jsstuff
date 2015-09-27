@@ -4,7 +4,7 @@ var util = {
 		return this.regex_trim.exec(str)[0];
 	},
 	check: function(ctd){
-		return this.trim(ctd.eq(5).html()) === "Current Assignments Report";
+		return this.trim(ctd.eq(3).children().html()) === "Current Assignments Report";
 	},
 	getPct: function(a, b){
 		return b === 0 ? 1.01 : a/b;
@@ -190,22 +190,24 @@ betterEdline.prototype.load = function(){
 			$t.eq(3).children().attr("href")
 		)[1];
 		var cls = localStorage["bedl" + id];
-		if (cls) cls = JSON.parse(cls);
+		if (cls){
+			cls = JSON.parse(cls);
+			$t.parent().hover(
+				function(){$(this).addClass("bedlHover");},
+				function(){$(this).removeClass("bedlHover");}
+			);
+		}else{
+			cls = null;
+			console.log("suspected class was not found");
+		}
 		_t.add(ind, id, cls);
-		$t.parent().hover(
-			function(){$(this).addClass("bedlHover");},
-			function(){$(this).removeClass("bedlHover");}
-		);
 	});
 };
 
 var gotoPage = function(code){
-	if(typeof JQCHROME !== 'undefined'){//chrome extension
-		var s = document.createElement("script");
-		s.innerHTML = "rlViewItm('" + code + "');";
-		(document.head || document.body).appendChild(s);
-	}else//tampermonkey
-		rlViewItm(code);
+	var s = document.createElement("script");
+	s.innerHTML = "rlViewItm('" + code + "');";
+	(document.head || document.body).appendChild(s);
 };
 var getClassID = function(arr, ind){
 	return arr[ind][0];
@@ -416,5 +418,6 @@ $(document).ready(function(){
 				})
 			)
 		);
+		console.log(beobj);
 	}
 });
