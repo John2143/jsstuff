@@ -1,110 +1,161 @@
 // ==UserScript==
 // @name         One way reddit
 // @namespace    http://reddit.com/
-// @version      1.0
+// @version      1.1
 // @description  click rank to hide post
 // @author       John2143
-// @match        http://www.reddit.com/
+// @match        *://www.reddit.com/
 // @grant        none
 // ==/UserScript==
 console.log("WE DID IT");
 
-
 function oneWayReddit(mh){
-	this.MAXHIST = mh || 250;
-	this._loaded = false;
-	this.showHidden = false;
+    this.MAXHIST = mh || 250;
+    this._loaded = false;
+    this.showHidden = false;
 }
 const getSiteTablePtr = function(){
-	return $(".sitetable > div.thing");
+    return $(".sitetable > div.thing");
 };
 const getLinkID = function(jqlink){
-	return jqlink.attr("data-fullname");
+    return jqlink.attr("data-fullname");
 };
 oneWayReddit.prototype.isHidden = function(lname){
-	return $.inArray(lname, this.tohide) != -1;
+    return $.inArray(lname, this.tohide) != -1;
 };
 oneWayReddit.prototype.hide = function(d){
-	d.hide();
-	d.addClass("OWRHidden");
+    d.hide();
+    d.addClass("OWRHidden");
 };
 oneWayReddit.prototype.hideSeen = function(){
-	if(!this._loaded) return;
-	var owr = this;
-	getSiteTablePtr()
-		.each(function(_ind){
-			var $this = $(this);
-			if (owr.isHidden(getLinkID($this))){
-				owr.hide($this);
-			}
-		});
+    if(!this._loaded) return;
+    getSiteTablePtr()
+        .each(() => {
+            const $this = $(this);
+            if (owr.isHidden(getLinkID($this))){
+                owr.hide($this);
+            }
+        });
 };
 oneWayReddit.prototype.toggleSeen = function(){
-	var objs = $(".OWRHidden");
-	if(this.showHidden)
-		objs.hide();
-	else
-		objs.show();
-	this.showHidden = !this.showHidden;
+    let objs = $(".OWRHidden");
+    if(this.showHidden){
+        objs.hide();
+    }else{
+        objs.show();
+    }
+    this.showHidden = !this.showHidden;
 
 };
 oneWayReddit.prototype.save = function(){
-	if(!this._loaded) return;
-	localStorage.setItem("owred", JSON.stringify(this.tohide));
-	localStorage.setItem("owredi", this.index);
+    if(!this._loaded) return;
+    localStorage.owrData = JSON.stringify({
+        tohide: this.tohide,
+        index: this.index,
+    });
 };
 oneWayReddit.prototype.add = function(data){
-	if(!this._loaded) return false;
-	if(this.isHidden(data)) return false;
-	this.tohide[this.index++] = data;
-	if (this.index > this.MAXHIST) this.index = 0;
-	return true;
+    if(!this._loaded) return false;
+    if(this.isHidden(data)) return false;
+    this.tohide[this.index++] = data;
+    if (this.index > this.MAXHIST) this.index = 0;
+    return true;
 };
 oneWayReddit.prototype.addRankButton = function(){
-	if(!this._loaded) return;
-	var owr = this;
-	$(".rank").click(function(){
-		var par = $(this).parent();
-		var save = owr.add(getLinkID(par));
-		owr.hide(par);
-		if(save) owr.save();
-	});
+    if(!this._loaded) return;
+    const owr = this;
+    $(".rank").click(function(){
+        let par = $(this).parent();
+        let save = owr.add(getLinkID(par));
+        owr.hide(par);
+        if(save) owr.save();
+    });
+};
+oneWayReddit.prototype.load = function(){
+    const realLoad = (data) => {
+        this.tohide = data.tohide || [];
+        this.index = data.index || 0;
+        this.hideSeen();
+    };
+    const getcb = (data) => {
+        if(data){
+            realLoad(data);
+        }else{
+            realLoad(localStorage.owrData);
+        }
+    };
+
+    if(this._loaded){
+        if(this.hasServer){
+            this.get(getcb);
+        }else{
+            realLoad(localStorage.owrData);
+        }
+    }else{
+        this.get(true, getcb);
+    }
+    this._loaded = true;
 };
 
+oneWayReddit.prototype.get = function(force, cb){
+    //TODO
+    if(!cb) cb = force;
+    return cb(false);
 
-oneWayReddit.prototype.load = function(){
-	this._loaded = true;
-	this.tohide = JSON.parse(localStorage.getItem("owred") || JSON.stringify([]));
-	this.index = localStorage.getItem("owredi") || 0
-	this.hideSeen();
+    if(!this.serverURL) return cb(false);
+    if(!force && !this.hasServer) return cb(false);
+
+    let htp = new XMLHttpRequest();
+    htp.onreadystatechange = function(){
+        if(htp.readyState === 4 && htp.status === 200){
+            this.hasServer = true;
+            cb(htp.responseText);
+        }else if(htp.readyState === 4 && htp.status === 404){
+            this.hasServer = false;
+            cb(false);
+        }
+    };
+    htp.open("GET", this.serverURL, true);
+    htp.send();
 };
 
 oneWayReddit.prototype.doinit = function(){
-	this.hideSeen();
-	this.addRankButton();
+    this.hideSeen();
+    this.addRankButton();
 };
 oneWayReddit.prototype._clear = function(){
-	this.index = 0;
-	this.tohide = [];
-	//No this.save() in case it was an accident
+    this.index = 0;
+    this.tohide = [];
+    //No this.save() in case it was an accident
 };
-var owr = new oneWayReddit(250);
+
 const style = (".OWRHidden {background-color: #EEE;}"); //Show visited as grey when unhidden
-var styleelem = document.createElement('style');
+let styleelem = document.createElement('style');
 styleelem.type = 'text/css';
 styleelem.innerHTML = style;
-$(document).load(function(){
-	owr.load();
-	owr.doinit();
-	document.getElementsByTagName('head')[0]
-		.appendChild(styleelem);
-	console.log("One way reddit loaded");
+
+let owr = new oneWayReddit(250);
+window.owr = owr;
+
+const init = function(){
+    owr.serverURL = localStorage.serverURL;
+    owr.load();
+    owr.doinit();
+    document.getElementsByTagName('head')[0]
+        .appendChild(styleelem);
+    console.log("One way reddit loaded");
+};
+
+$(function(){
+    init();
 });
+
 console.log("One way reddit activated");
 $(document).keyup(function(e){
-	var kc = e.keyCode;
-	if(kc == "66") //b
-		owr.doinit();
-	else if (kc == "68")
-		owr.toggleSeen();
+    const kc = e.keyCode;
+    if(kc == "66"){
+        owr.doinit();
+    }else if (kc == "68"){
+        owr.toggleSeen();
+    }
 });
